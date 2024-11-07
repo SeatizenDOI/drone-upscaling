@@ -1,0 +1,6 @@
+{
+    "ASV_CSV_METADATA_PATH": "./data/plancha/probs/global_LEU_ml_scores_gps.csv",
+    "DRONE_PATH": "./data/drone_stleu",
+    "MANUEL_BOUNDARY_PATH": "./data/drone_stleu/odm_orthophoto/manual_boundary_ortho.geojson",
+    "OUTPUT_DIR_PATH": "./data/output/stleu"
+}

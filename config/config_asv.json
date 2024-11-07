@@ -1,0 +1,6 @@
+{
+    "ASV_CSV_METADATA_PATH": "./data/plancha/probs/global_DEAU_ml_scores_gps.csv",
+    "DRONE_PATH": "/home/bioeos/Documents/Bioeos/ortho/20231208_REU-SAINTLEU_UAV_01",
+    "MANUEL_BOUNDARY_PATH": "./data/drone_troudeau/manual_boundary_ortho.geojson",
+    "OUTPUT_DIR_PATH": "./data/output/asv_test"
+}
