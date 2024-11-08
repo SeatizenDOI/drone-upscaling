@@ -3,6 +3,8 @@ from pathlib import Path
 from argparse import Namespace, ArgumentParser
 
 from src.ortho.Orthophoto import Orthophoto
+from src.ortho.ASVManager import ASVManager
+
 
 def parse_args() -> Namespace:
     parser = ArgumentParser(description="Split UAV orthophoto to tiles and upscale ASV predictions to UAV annotations.")
@@ -28,8 +30,10 @@ def parse_args() -> Namespace:
 
 def main(args: Namespace) -> None:
 
+
     # Setup.
     orthoManager = Orthophoto(args)
+    annotationManager = ASVManager(args)
 
     # Create output folder.
     print("Init output folder.")
@@ -47,7 +51,9 @@ def main(args: Namespace) -> None:
     tiles_png_folder.mkdir(exist_ok=True, parents=True)
 
     # Split tif into tiles and filter on manual boundary
-    orthoManager.setup_ortho_tiles(tiles_folder, tiles_png_folder)
+    tiles_bounds_df = orthoManager.setup_ortho_tiles(tiles_folder, tiles_png_folder)
+
+    annotationManager.compute_annotations(output_folder, tiles_bounds_df)
 
 
 

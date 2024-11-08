@@ -11,16 +11,13 @@ from shapely.geometry import box
 import rasterio
 from rasterio.windows import Window
 
+from ..utils.tools import check_crs
+from .BaseManager import BaseManager
 
-
-from ..utils.tools import get_config_env, check_crs
-
-class Orthophoto:
+class Orthophoto(BaseManager):
 
     def __init__(self, args: Namespace) -> None:
-
-        self.args = args
-        self.config_env = get_config_env(self.args.config_path)
+        BaseManager.__init__(self, args)
         
         # All path variable not defined in constructor are defined in setup and nowhere else.
         self.setup()
@@ -54,35 +51,37 @@ class Orthophoto:
                 raise NameError(f"Orthophoto crs doesn't match with desired args {self.args.matching_crs}")
     
     
-    def setup_ortho_tiles(self, drone_preprocess_tif_folder: Path, drone_filtred_png_folder: Path):
+    def setup_ortho_tiles(self, drone_preprocess_tif_folder: Path, drone_filtered_png_folder: Path) -> pd.DataFrame:
 
         bounds = self.split_tif_into_tiles(drone_preprocess_tif_folder)
         filtered_bounds_on_manual_boundary_df = self.filter_tiles_based_on_manual_boundary(bounds)
-        self.convert_tif_to_png(drone_filtred_png_folder, filtered_bounds_on_manual_boundary_df)
+        self.convert_tif_to_png(drone_filtered_png_folder, filtered_bounds_on_manual_boundary_df)
 
+        return filtered_bounds_on_manual_boundary_df
     
-    def convert_tif_to_png(self, drone_filtred_png_folder: Path, filtered_bounds_on_manual_boundary_df: pd.DataFrame) -> None:
+
+    def convert_tif_to_png(self, drone_filtered_png_folder: Path, filtered_bounds_on_manual_boundary_df: pd.DataFrame) -> None:
         print("\n\n-- func: Convert TIF Files to png files.")
         
         # Mandatory by gdal warning.
         gdal.DontUseExceptions()
 
         # Convert each tif image in the input directory to png format.
-        for i, row in filtered_bounds_on_manual_boundary_df.iterrows():
+        for i, row in tqdm(filtered_bounds_on_manual_boundary_df.iterrows(), total=len(filtered_bounds_on_manual_boundary_df)):
             input_path = Path(row["tile_filename"])
-            output_path = Path(drone_filtred_png_folder, row["tile_png"])
+            output_path = Path(drone_filtered_png_folder, row["tile_png"])
 
             with gdal.Open(input_path) as src_ds:
                 gdal.Translate(output_path, src_ds, format='PNG')
         
-        print("\n-- func: Conversion to PNG completed.")
+        print("-- func: Conversion to PNG completed.")
 
         # After all the conversions are done, remove the .aux.xml files.
-        for aux_file in drone_filtred_png_folder.iterdir():
+        for aux_file in drone_filtered_png_folder.iterdir():
             if ".aux.xml" in aux_file.name.lower():
                 aux_file.unlink()
         
-        print("\n-- func: All auxiliary .aux.xml files have been removed.")
+        print("-- func: All auxiliary .aux.xml files have been removed.")
 
 
     def filter_tiles_based_on_manual_boundary(self, bounds_df: pd.DataFrame) -> pd.DataFrame:
@@ -100,10 +99,9 @@ class Orthophoto:
         # Assuming tile_bounds is a list of tuples/lists in the format [(minx, miny, maxx, maxy), ...]
         def is_bounds_in_polygon(row):
             """ If bounds in polygon, convert tif name to png name else return '' """
-
-            minx, miny, maxx, maxy = row["bounds"]
-            if polygon.contains(box(minx, miny, maxx, maxy).centroid):
-                return f"odm_orthophoto_{int(minx)}_{int(maxy)}.png"
+            
+            if polygon.contains(row["bounds_polygon"].centroid):
+                return f"odm_orthophoto_{int(row["bounds_polygon"].centroid.x)}_{int(row["bounds_polygon"].centroid.y)}.png"
             return ""
 
         bounds_df["tile_png"] = bounds_df.apply(is_bounds_in_polygon, axis=1)
@@ -123,6 +121,7 @@ class Orthophoto:
         with rasterio.open(self.orthophoto_filepath) as src:
 
             for i in tqdm(range(0, src.height, tile_size - y_overlap)):
+                if (i / (tile_size - y_overlap) <= 200): continue
                 for j in range(0, src.width, tile_size - x_overlap):
                     window = Window(j, i, tile_size, tile_size)
 
@@ -156,11 +155,11 @@ class Orthophoto:
                         transform=transform_window
                     ) as dst:
                         dst.write(tile)
-                        bounds_list.append((tile_filename, dst.bounds))
+                        bounds_list.append((tile_filename, box(*dst.bounds)))
                 
-                if (i / (tile_size - y_overlap)  >= 1): break
+                if (i / (tile_size - y_overlap) >= 210): break
 
-        bounds_df = pd.DataFrame(bounds_list, columns=["tile_filename", "bounds"])
+        bounds_df = pd.DataFrame(bounds_list, columns=["tile_filename", "bounds_polygon"])
         print(f"Tiles generated: {len(bounds_df)}")
         
         return bounds_df

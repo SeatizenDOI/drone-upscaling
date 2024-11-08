@@ -8,3 +8,4 @@ dependencies:
     - rasterio==1.4.2
     - geopandas==1.0.1
     - gdal==3.8.4
+    - vector3d==1.1.1
