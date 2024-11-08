@@ -1,20 +1,13 @@
 import shutil
 import pandas as pd
 from tqdm import tqdm
-from osgeo import gdal
 import geopandas as gpd
 from pathlib import Path
 from pyproj import Transformer
-from argparse import Namespace
 
-from ..utils.tools import calculate_probability_from_binary_fine_scale, calculate_probability_from_probs_fine_scale
-from .BaseManager import BaseManager
+from .tools import calculate_probability_from_binary_fine_scale, calculate_probability_from_probs_fine_scale
 
-class AnnotationMaker(BaseManager):
-
-    def __init__(self, args: Namespace) -> None:
-        BaseManager.__init__(self, args)
-
+class AnnotationMaker():
 
     def create_and_compute_annotations(self, save_folder: Path, drone_folder_png: Path, annotation_tiles_gdf_filtered: gpd.GeoDataFrame) -> Path: 
 

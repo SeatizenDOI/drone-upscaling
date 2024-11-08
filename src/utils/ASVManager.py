@@ -5,7 +5,7 @@ from pathlib import Path
 from argparse import Namespace
 from shapely.ops import unary_union
 
-from ..utils.tools import calculate_footprint
+from .tools import calculate_footprint
 from .BaseManager import BaseManager
 
 class ASVManager(BaseManager):

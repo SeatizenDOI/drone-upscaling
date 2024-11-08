@@ -12,7 +12,7 @@ from shapely.geometry import box
 import rasterio
 from rasterio.windows import Window
 
-from ..utils.tools import check_crs
+from .tools import check_crs
 from .BaseManager import BaseManager
 
 class Orthophoto(BaseManager):

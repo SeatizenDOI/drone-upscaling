@@ -2,9 +2,9 @@ import shutil
 from pathlib import Path
 from argparse import Namespace, ArgumentParser
 
-from src.ortho.Orthophoto import Orthophoto
-from src.ortho.ASVManager import ASVManager
-from src.ortho.AnnotationMaker import AnnotationMaker
+from src.utils.Orthophoto import Orthophoto
+from src.utils.ASVManager import ASVManager
+from src.utils.AnnotationMaker import AnnotationMaker
 
 def parse_args() -> Namespace:
     parser = ArgumentParser(description="Split UAV orthophoto to tiles and upscale ASV predictions to UAV annotations.")
