@@ -1,25 +1,54 @@
+<p align="center">
+  <a href="https://github.com/SeatizenDOI/drone-upscaling/graphs/contributors"><img src="https://img.shields.io/github/contributors/SeatizenDOI/drone-upscaling" alt="GitHub contributors"></a>
+  <a href="https://github.com/SeatizenDOI/drone-upscaling/network/members"><img src="https://img.shields.io/github/forks/SeatizenDOI/drone-upscaling" alt="GitHub forks"></a>
+  <a href="https://github.com/SeatizenDOI/drone-upscaling/issues"><img src="https://img.shields.io/github/issues/SeatizenDOI/drone-upscaling" alt="GitHub issues"></a>
+  <a href="https://github.com/SeatizenDOI/drone-upscaling/blob/master/LICENSE"><img src="https://img.shields.io/github/license/SeatizenDOI/drone-upscaling" alt="License"></a>
+  <a href="https://github.com/SeatizenDOI/drone-upscaling/pulls"><img src="https://img.shields.io/github/issues-pr/SeatizenDOI/drone-upscaling" alt="GitHub pull requests"></a>
+  <a href="https://github.com/SeatizenDOI/drone-upscaling/stargazers"><img src="https://img.shields.io/github/stars/SeatizenDOI/drone-upscaling" alt="GitHub stars"></a>
+  <a href="https://github.com/SeatizenDOI/drone-upscaling/watchers"><img src="https://img.shields.io/github/watchers/SeatizenDOI/drone-upscaling" alt="GitHub watchers"></a>
+</p>
+<div align="center">
+  <a href="https://github.com/SeatizenDOI/drone-upscaling">View framework</a>
+  ·
+  <a href="https://github.com/SeatizenDOI/drone-upscaling/issues">Report Bug</a>
+  ·
+  <a href="https://github.com/SeatizenDOI/drone-upscaling/issues">Request Feature</a>
+</div>
+
+<div align="center">
+
 # Drone Upscaling
 
+</div>
 
 
-### Installation de GDAl 
+## Installation
 
- Pour installer gdal 
+To ensure a consistent environment for all users, this project uses a Conda environment defined in a `requirements.yml` file. Follow these steps to set up your environment:
 
+1. **Install Conda:** If you do not have Conda installed, download and install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/products/distribution).
 
- pip install gdal==[version]
+2. **Dependencies:** You need to install `sudo apt-get install build-essentials build-essential libgdal-dev`. You need to match the libgdal version with gdal pip package version.
 
- la version doit matcher avec la version de libgdal
+3. **Create the Conda Environment:** Navigate to the root of the project directory and run the following command to create a new environment from the `requirements.yml` file:
+   ```bash
+   conda env create -f requirements.yml
+   ```
 
- 6. **Troubleshooting:** If `ImportError: /home/bioeos/miniconda3/envs/drone_upscaling_env/bin/../lib/libstdc++.so.6: version 'GLIBCXX_3.4.30' not found (required by /lib/x86_64-linux-gnu/libgdal.so.34)`
+4. **Activate the Environment:** Once the environment is created, activate it using:
+   ```bash
+   conda activate drone_upscaling_env
+   ```
 
-Use:
+ 5. **Troubleshooting:** If `ImportError: /home/bioeos/miniconda3/envs/drone_upscaling_env/bin/../lib/libstdc++.so.6: version 'GLIBCXX_3.4.30' not found (required by /lib/x86_64-linux-gnu/libgdal.so.34)`
 
-`sudo find / -name libstdc++.so.6` to find your local file.
+  Use:
 
-`strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX` to check if the `version 'GLIBCXX_3.4.32'` is present.
+  `sudo find / -name libstdc++.so.6` to find your local file.
 
-Then:
+  `strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX` to check if the `version 'GLIBCXX_3.4.32'` is present.
+
+  Then:
 ```bash
 ln -sf /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /home/bioeos/miniconda3/envs/drone_upscaling_env/lib/libstdc++.so
 ln -sf /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /home/bioeos/miniconda3/envs/drone_upscaling_env/lib/libstdc++.so.6

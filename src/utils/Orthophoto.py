@@ -69,10 +69,10 @@ class Orthophoto(BaseManager):
 
         # Convert each tif image in the input directory to png format.
         for i, row in tqdm(filtered_bounds_on_manual_boundary_df.iterrows(), total=len(filtered_bounds_on_manual_boundary_df)):
-            input_path = Path(row["tile_filename"])
+            input_path = row["tile_filename"]
             output_path = Path(drone_filtered_png_folder, row["tile_png"])
 
-            with gdal.Open(input_path) as src_ds:
+            with gdal.Open(str(input_path)) as src_ds:
                 gdal.Translate(output_path, src_ds, format='PNG')
         
         print("-- func: Conversion to PNG completed.")
@@ -160,6 +160,9 @@ class Orthophoto(BaseManager):
         bounds_df = pd.DataFrame(bounds_list, columns=["tile_filename", "bounds_polygon"])
         print(f"Tiles generated: {len(bounds_df)}")
         
+        if len(bounds_df) == 0: 
+            raise NameError("Not enough tiles to continue")
+
         return bounds_df
 
     def create_unlabeled_csv(self, save_folder: Path, unlabeled_folder: Path, tiles_bound_df: pd.DataFrame):

@@ -34,7 +34,7 @@ def main(args: Namespace) -> None:
     # Setup.
     orthoManager = Orthophoto(args)
     asvManager = ASVManager(args)
-    annotationMaker = AnnotationMaker(args)
+    annotationMaker = AnnotationMaker()
 
     # Create output folder.
     print("Init output folder.")
