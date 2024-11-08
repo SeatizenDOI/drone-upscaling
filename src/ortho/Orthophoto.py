@@ -6,6 +6,7 @@ from osgeo import gdal
 import geopandas as gpd
 from pathlib import Path
 from argparse import Namespace
+from pyproj import Transformer
 from shapely.geometry import box
 
 import rasterio
@@ -121,7 +122,6 @@ class Orthophoto(BaseManager):
         with rasterio.open(self.orthophoto_filepath) as src:
 
             for i in tqdm(range(0, src.height, tile_size - y_overlap)):
-                if (i / (tile_size - y_overlap) <= 200): continue
                 for j in range(0, src.width, tile_size - x_overlap):
                     window = Window(j, i, tile_size, tile_size)
 
@@ -156,10 +156,50 @@ class Orthophoto(BaseManager):
                     ) as dst:
                         dst.write(tile)
                         bounds_list.append((tile_filename, box(*dst.bounds)))
-                
-                if (i / (tile_size - y_overlap) >= 210): break
 
         bounds_df = pd.DataFrame(bounds_list, columns=["tile_filename", "bounds_polygon"])
         print(f"Tiles generated: {len(bounds_df)}")
         
         return bounds_df
+
+    def create_unlabeled_csv(self, save_folder: Path, unlabeled_folder: Path, tiles_bound_df: pd.DataFrame):
+        print("\n\n-- func: Create unlabeled CSV.")
+        transformer = Transformer.from_crs("epsg:32740", "epsg:4326", always_xy=True)  # Adjust the EPSG codes as needed
+
+        # Prepare CSV for GPS information
+        csv_path = Path(save_folder, 'unlabeled_images_geolocations.csv')
+        geolocations = []  # List to hold the geolocation data
+
+        tiles_bound_df.set_index("tile_png", inplace=True)
+
+        # Convert TIFF to PNG and extract GPS information
+        for filename in tqdm(unlabeled_folder.iterdir()):
+            if filename.suffix.lower() != ".png": continue
+
+            file_tif = tiles_bound_df.loc[filename.name]["tile_filename"]
+
+            # Open the input file and retrieve geotransform data
+            with gdal.Open(file_tif) as src_ds:
+                gt = src_ds.GetGeoTransform()
+                width = src_ds.RasterXSize
+                height = src_ds.RasterYSize
+
+                # Calculate the coordinates of the image centroid
+                centroid_x = gt[0] + (width * gt[1] / 2) + (height * gt[2] / 2)
+                centroid_y = gt[3] + (width * gt[4] / 2) + (height * gt[5] / 2)
+
+                # Convert from projected coordinates (UTM) to geographic coordinates (lat, lon)
+                lon, lat = transformer.transform(centroid_x, centroid_y)
+
+                # Append the data to the list
+                geolocations.append({
+                    'FileName': filename.name,
+                    'GPSLatitude': lat,
+                    'GPSLongitude': lon
+                })
+
+        # Save geolocation data to CSV
+        df_geo = pd.DataFrame(geolocations)
+        df_geo.to_csv(csv_path, index=False)
+
+        print("-- func: Geolocation extraction completed. Data saved to:", csv_path)

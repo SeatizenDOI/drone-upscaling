@@ -4,7 +4,7 @@ from argparse import Namespace, ArgumentParser
 
 from src.ortho.Orthophoto import Orthophoto
 from src.ortho.ASVManager import ASVManager
-
+from src.ortho.AnnotationMaker import AnnotationMaker
 
 def parse_args() -> Namespace:
     parser = ArgumentParser(description="Split UAV orthophoto to tiles and upscale ASV predictions to UAV annotations.")
@@ -33,7 +33,8 @@ def main(args: Namespace) -> None:
 
     # Setup.
     orthoManager = Orthophoto(args)
-    annotationManager = ASVManager(args)
+    asvManager = ASVManager(args)
+    annotationMaker = AnnotationMaker(args)
 
     # Create output folder.
     print("Init output folder.")
@@ -42,20 +43,23 @@ def main(args: Namespace) -> None:
         shutil.rmtree(output_folder)
     output_folder.mkdir(exist_ok=True, parents=True)
 
-    # Create tiles_folder.
+    # Create tiles_folder for tif.
     tiles_folder_name = "drone_tiles" if args.h_shift == 0 and args.v_shift == 0 else f"drone_tiles_overlap{args.h_shift}"
     tiles_folder = Path(output_folder, tiles_folder_name)
     tiles_folder.mkdir(exist_ok=True, parents=True)
 
+    # Create tiles_folder for png.
     tiles_png_folder = Path(output_folder, "drone_tiles_png")
     tiles_png_folder.mkdir(exist_ok=True, parents=True)
 
     # Split tif into tiles and filter on manual boundary
     tiles_bounds_df = orthoManager.setup_ortho_tiles(tiles_folder, tiles_png_folder)
 
-    annotationManager.compute_annotations(output_folder, tiles_bounds_df)
+    annotation_filtered_gdf = asvManager.compute_annotations(output_folder, tiles_bounds_df)
 
+    unlabeled_folder = annotationMaker.create_and_compute_annotations(output_folder, tiles_png_folder, annotation_filtered_gdf)
 
+    orthoManager.create_unlabeled_csv(output_folder, unlabeled_folder, tiles_bounds_df)
 
 if __name__ == "__main__":
     args = parse_args()

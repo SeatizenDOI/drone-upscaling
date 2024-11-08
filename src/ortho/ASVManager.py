@@ -15,15 +15,16 @@ class ASVManager(BaseManager):
         
         self.annotations_plancha_filtered = gpd.GeoDataFrame()
 
-    def compute_annotations(self, save_folder: Path, tiles_bounds: pd.DataFrame):
+    def compute_annotations(self, save_folder: Path, tiles_bounds: pd.DataFrame) -> gpd.GeoDataFrame:
         self.filter_annotation_asv(save_folder)
         annotations_tiles = self.match_asv_annotations_with_tiles(save_folder, tiles_bounds)
         annotation_tiles_gdf = self.compute_footprint(annotations_tiles)
 
         annotation_tiles_gdf_filtered = self.filter_tiles_enough_underwater_coverage(annotation_tiles_gdf)
 
+        return annotation_tiles_gdf_filtered
 
-    def filter_tiles_enough_underwater_coverage(self, annotation_tiles_gdf: gpd.GeoDataFrame):
+    def filter_tiles_enough_underwater_coverage(self, annotation_tiles_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         print("\n\n-- func: Filter tiles with enough underwater coverage.")
         
         merged_footprints = annotation_tiles_gdf.groupby('FileName')['UnderwaterImageFootprint'].apply(unary_union).reset_index()

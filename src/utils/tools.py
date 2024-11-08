@@ -1,5 +1,7 @@
 import json
 import rasterio
+import numpy as np
+import pandas as pd
 import geopandas as gpd
 from pathlib import Path
 from functools import partial
@@ -114,3 +116,33 @@ def calculate_footprint(row, fov_x, fov_y, target_crs):
     footprint_projected = transform(partial(transformer.transform), footprint_geo)
 
     return footprint_projected
+
+# Function to calculate the probability for a single class
+def calculate_probability_from_binary_fine_scale(df, class_name):
+    # Filter rows where the class is True
+    df_class = df[df[class_name]]
+    if df_class.empty:
+        return 0.0
+    
+    # Calculate the product term for the given class
+    product_term = np.prod([
+        (row['UnderwaterImageArea'] - row['IntersectionArea']) / row['UnderwaterImageArea']
+        for _, row in df_class.iterrows()
+        if not pd.isna(row['UnderwaterImageArea']) and not pd.isna(row['IntersectionArea'])
+    ])
+    
+    # Calculate the final probability
+    P_presence = 1 - product_term
+    return P_presence
+
+def calculate_probability_from_probs_fine_scale(df, class_name):
+    # Calculate the product term for the given class, incorporating probabilities
+    product_term = np.prod([
+        1 - (row[class_name] * (row['UnderwaterImageArea'] - row['IntersectionArea']) / row['UnderwaterImageArea'])
+        for _, row in df.iterrows()
+        if not pd.isna(row['UnderwaterImageArea']) and not pd.isna(row['IntersectionArea']) and not pd.isna(row[class_name])
+    ])
+    
+    # Calculate the final probability
+    P_presence = 1 - product_term
+    return P_presence
