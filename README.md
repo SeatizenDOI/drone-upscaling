@@ -72,3 +72,37 @@ docker run --user 1000 --rm \
   -v ./data:/home/seatizen/app/data \
  --name drone-upscaling drone-upscaling:latest -c --config_path ./config/config_troudeau.json
 ```
+
+### Build singularity container
+
+`module load singularity/3.6.4`
+
+`singularity build -f drone_upscaling.sif docker://seatizendoi/drone-upscaling:latest`
+
+### PBS
+
+```bash
+#!/bin/bash
+
+#PBS -l select=1:ncpus=32:mem=40g
+#PBS -l walltime=2:00:00
+#PBS -N drone_upscaling
+#PBS -q omp
+#PBS -S /bin/bash
+
+signal_handler() {
+        pkill --parent "${$}"
+}
+trap signal_handler EXIT
+cd /home1/datahome/villien/PBS/drone_upscaling/
+
+module load singularity/3.6.4
+
+
+singularity run --pwd /home/seatizen/app/ \
+--bind /home1/datahome/villien/PBS/drone_upscaling/config:/home/seatizen/app/config \
+--bind /home1/datawork/villien/drone_upscaling_data:/home/seatizen/app/data \
+drone_upscaling.sif -c --config_path ./config/config_stleu.json
+
+qstat -f $PBS_JOBID
+```
