@@ -138,7 +138,7 @@ def calculate_probability_from_binary_fine_scale(df, class_name):
 def calculate_probability_from_probs_fine_scale(df, class_name):
     # Calculate the product term for the given class, incorporating probabilities
     product_term = np.prod([
-        1 - (row[class_name] * (row['UnderwaterImageArea'] - row['IntersectionArea']) / row['UnderwaterImageArea'])
+        1 - (row[class_name] * row['IntersectionArea'] / row['UnderwaterImageArea'])
         for _, row in df.iterrows()
         if not pd.isna(row['UnderwaterImageArea']) and not pd.isna(row['IntersectionArea']) and not pd.isna(row[class_name])
     ])

@@ -1,6 +1,6 @@
 {
-    "ASV_CSV_METADATA_PATH": "./data/plancha/probs/global_DEAU_ml_scores_gps.csv",
-    "DRONE_PATH": "./data/drone_troudeau",
-    "MANUEL_BOUNDARY_PATH": "./data/drone_troudeau/odm_orthophoto/manual_boundary_ortho.geojson",
-    "OUTPUT_DIR_PATH": "./data/output/drone_troudeau"
+    "ASV_CSV_METADATA_PATH": "./layers/plancha/IA/probs/global_DEAU_ml_scores_gps.csv",
+    "DRONE_PATH": "./layers/Luni-vert-12-2-2023-all",
+    "MANUEL_BOUNDARY_PATH": "./layers/Luni-vert-12-2-2023-all/odm_orthophoto/manual_boundary_ortho.geojson",
+    "OUTPUT_DIR_PATH": "./layers/output/troudeau"
 }

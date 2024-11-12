@@ -69,8 +69,8 @@ Run command :
 ```bash
 docker run --user 1000 --rm \
   -v ./config/:/home/seatizen/app/config \
-  -v ./data:/home/seatizen/app/data \
- --name drone-upscaling drone-upscaling:latest -c --config_path ./config/config_troudeau.json
+  -v /mnt/disk_victorlebos/qgis_projects/2023_upscaling_drone/layers/:/home/seatizen/app/layers \
+ --name drone-upscaling drone-upscaling:latest -c --config_path ./config/config_stleu.json
 ```
 
 ### Build singularity container
