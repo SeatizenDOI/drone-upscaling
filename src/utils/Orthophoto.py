@@ -1,4 +1,5 @@
 import json
+import shutil
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -69,8 +70,11 @@ class Orthophoto(BaseManager):
 
         # Convert each tif image in the input directory to png format.
         for i, row in tqdm(filtered_bounds_on_manual_boundary_df.iterrows(), total=len(filtered_bounds_on_manual_boundary_df)):
-            input_path = row["tile_filename"]
-            output_path = Path(drone_filtered_png_folder, row["tile_png"])
+            # Rename tif file to match png filename
+            input_path = Path(row["tile_filename"].parent, f'{row["tile_png"]}.tif')
+            output_path = Path(drone_filtered_png_folder, f'{row["tile_png"]}.png')
+
+            shutil.move(row["tile_filename"], input_path)
 
             with gdal.Open(str(input_path)) as src_ds:
                 gdal.Translate(output_path, src_ds, format='PNG')
@@ -102,11 +106,11 @@ class Orthophoto(BaseManager):
             """ If bounds in polygon, convert tif name to png name else return '' """
             
             if polygon.contains(row["bounds_polygon"].centroid):
-                return f"odm_orthophoto_{int(row["bounds_polygon"].centroid.x)}_{int(row["bounds_polygon"].centroid.y)}.png"
+                return f"odm_orthophoto_{int(row["bounds_polygon"].centroid.x)}_{int(row["bounds_polygon"].centroid.y)}"
             return ""
 
         bounds_df["tile_png"] = bounds_df.apply(is_bounds_in_polygon, axis=1)
-
+        
         return bounds_df[bounds_df["tile_png"] != ""].reset_index()
 
 
@@ -179,8 +183,7 @@ class Orthophoto(BaseManager):
         for filename in tqdm(unlabeled_folder.iterdir()):
             if filename.suffix.lower() != ".png": continue
 
-            file_tif = tiles_bound_df.loc[filename.name]["tile_filename"]
-
+            file_tif = Path(tiles_bound_df.loc[filename.stem]["tile_filename"].parent, f'{filename.stem}.tif')
             # Open the input file and retrieve geotransform data
             with gdal.Open(file_tif) as src_ds:
                 gt = src_ds.GetGeoTransform()

@@ -44,12 +44,17 @@ def main(args: Namespace) -> None:
     output_folder.mkdir(exist_ok=True, parents=True)
 
     # Create tiles_folder for tif.
-    tiles_folder_name = "drone_tiles" if args.h_shift == 0 and args.v_shift == 0 else f"drone_tiles_overlap{args.h_shift}"
+    tiles_folder_name = "drone_tiles" 
+    if args.h_shift != 0 and args.v_shift != 0:
+        tiles_folder_name = f"{tiles_folder_name}_overlap{args.h_shift}"
+    if args.footprint_threshold != 1.0:
+        tiles_folder_name = f"{tiles_folder_name}_footprint{args.footprint_threshold}"
+
     tiles_folder = Path(output_folder, tiles_folder_name)
     tiles_folder.mkdir(exist_ok=True, parents=True)
 
     # Create tiles_folder for png.
-    tiles_png_folder = Path(output_folder, "drone_tiles_png")
+    tiles_png_folder = Path(output_folder, f"{tiles_folder_name}_png")
     tiles_png_folder.mkdir(exist_ok=True, parents=True)
 
     # Split tif into tiles and filter on manual boundary

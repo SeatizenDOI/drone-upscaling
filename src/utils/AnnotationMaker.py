@@ -31,7 +31,7 @@ class AnnotationMaker():
         for file_png in tqdm(drone_folder_png.iterdir()):
             if not file_png.is_file() or file_png.suffix.lower() != ".png": continue
 
-            output_path = Path(annotated_dir, file_png.name) if file_png.name in df_anno.index else Path(unlabeled_dir, file_png.name)
+            output_path = Path(annotated_dir, file_png.name) if file_png.stem in df_anno.index else Path(unlabeled_dir, file_png.name)
 
             shutil.move(file_png, output_path)
 
@@ -92,7 +92,7 @@ class AnnotationMaker():
         # Compute tiles annotations based on binary fine scale predictions
         for file_name, group in binary_annotation_df.groupby('FileName'):
             probabilities = {class_name: calculate_probability_from_binary_fine_scale(group, class_name) for class_name in classes}
-            probabilities['FileName'] = file_name
+            probabilities['FileName'] = file_name 
             probabilities['GPSLatitude'] = group['GPSLatitude'].iloc[0]
             probabilities['GPSLongitude'] = group['GPSLongitude'].iloc[0]
             annotations_tiles_from_binary_fine_scale = pd.concat([annotations_tiles_from_binary_fine_scale, pd.DataFrame([probabilities])], ignore_index=True)
