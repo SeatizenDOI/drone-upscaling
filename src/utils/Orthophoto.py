@@ -53,12 +53,12 @@ class Orthophoto(BaseManager):
                 raise NameError(f"Orthophoto crs doesn't match with desired args {self.args.matching_crs}")
     
     
-    def setup_ortho_tiles(self, drone_preprocess_tif_folder: Path, drone_filtered_png_folder: Path) -> pd.DataFrame:
-
+    def setup_ortho_tiles(self, save_folder: Path, drone_preprocess_tif_folder: Path, drone_filtered_png_folder: Path) -> pd.DataFrame:
+        csv_path = Path(save_folder, 'filtered_bounds_on_manual_boundary_df.csv')
         bounds = self.split_tif_into_tiles(drone_preprocess_tif_folder)
         filtered_bounds_on_manual_boundary_df = self.filter_tiles_based_on_manual_boundary(bounds)
         self.convert_tif_to_png(drone_filtered_png_folder, filtered_bounds_on_manual_boundary_df)
-
+        filtered_bounds_on_manual_boundary_df.to_csv(csv_path, index=False)
         return filtered_bounds_on_manual_boundary_df
     
 

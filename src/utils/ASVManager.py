@@ -21,7 +21,7 @@ class ASVManager(BaseManager):
         annotation_tiles_gdf = self.compute_footprint(annotations_tiles)
 
         annotation_tiles_gdf_filtered = self.filter_tiles_enough_underwater_coverage(annotation_tiles_gdf)
-
+        annotation_tiles_gdf_filtered.to_csv(Path(save_folder, "annotation_tiles.csv"), index=False)
         return annotation_tiles_gdf_filtered
 
     def filter_tiles_enough_underwater_coverage(self, annotation_tiles_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:

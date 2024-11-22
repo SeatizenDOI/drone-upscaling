@@ -58,7 +58,7 @@ def main(args: Namespace) -> None:
     tiles_png_folder.mkdir(exist_ok=True, parents=True)
 
     # Split tif into tiles and filter on manual boundary
-    tiles_bounds_df = orthoManager.setup_ortho_tiles(tiles_folder, tiles_png_folder)
+    tiles_bounds_df = orthoManager.setup_ortho_tiles(output_folder, tiles_folder, tiles_png_folder)
 
     annotation_filtered_gdf = asvManager.compute_annotations(output_folder, tiles_bounds_df)
 
