@@ -15,13 +15,13 @@ class ASVManager(BaseManager):
         
         self.annotations_plancha_filtered = gpd.GeoDataFrame()
 
-    def compute_annotations(self, save_folder: Path, tiles_bounds: pd.DataFrame) -> gpd.GeoDataFrame:
-        self.filter_annotation_asv(save_folder)
-        annotations_tiles = self.match_asv_annotations_with_tiles(save_folder, tiles_bounds)
+    def compute_annotations(self, tiles_bounds: pd.DataFrame) -> gpd.GeoDataFrame:
+        self.filter_annotation_asv()
+        annotations_tiles = self.match_asv_annotations_with_tiles(tiles_bounds)
         annotation_tiles_gdf = self.compute_footprint(annotations_tiles)
 
         annotation_tiles_gdf_filtered = self.filter_tiles_enough_underwater_coverage(annotation_tiles_gdf)
-        annotation_tiles_gdf_filtered.to_csv(Path(save_folder, "annotation_tiles.csv"), index=False)
+        annotation_tiles_gdf_filtered.to_csv(Path(self.output_folder, "annotation_tiles.csv"), index=False)
         return annotation_tiles_gdf_filtered
 
     def filter_tiles_enough_underwater_coverage(self, annotation_tiles_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
@@ -88,7 +88,7 @@ class ASVManager(BaseManager):
         return annotation_tiles_gdf
 
 
-    def filter_annotation_asv(self, save_folder: Path) -> None:
+    def filter_annotation_asv(self) -> None:
         print("\n\n-- func: Load and filter asv annotations.")
 
         self.asv_metadata_path = Path(self.config_env["ASV_CSV_METADATA_PATH"])
@@ -111,10 +111,10 @@ class ASVManager(BaseManager):
 
         self.annotations_plancha_filtered = asv_metadata_gdf[asv_metadata_gdf.geometry.within(polygon)]
 
-        self.annotations_plancha_filtered.to_file(Path(save_folder, "annotation_plancha_filtered.geojson"), driver='GeoJSON')
+        self.annotations_plancha_filtered.to_file(Path(self.output_folder, "annotation_plancha_filtered.geojson"), driver='GeoJSON')
     
 
-    def match_asv_annotations_with_tiles(self, save_folder: Path, tiles_bounds: pd.DataFrame) -> pd.DataFrame:
+    def match_asv_annotations_with_tiles(self, tiles_bounds: pd.DataFrame) -> pd.DataFrame:
         print("\n\n-- func: Match asv annotations position with tiles bounds.")
 
         annotation_tiles = pd.DataFrame()
@@ -133,6 +133,6 @@ class ASVManager(BaseManager):
         annotation_tiles = annotation_tiles.dropna(subset=['GPSPitch'])
         annotation_tiles = annotation_tiles.dropna(subset=['GPSTrack'])
 
-        # annotation_tiles.to_csv(Path(save_folder, "annotation_tiles.csv"), index=False)
+        # annotation_tiles.to_csv(Path(self.output_folder, "annotation_tiles.csv"), index=False)
 
         return annotation_tiles

@@ -1,3 +1,4 @@
+from argparse import Namespace
 import shutil
 import pandas as pd
 from tqdm import tqdm
@@ -5,37 +6,41 @@ import geopandas as gpd
 from pathlib import Path
 from pyproj import Transformer
 
+from .BaseManager import BaseManager
 from .tools import calculate_probability_from_binary_fine_scale, calculate_probability_from_probs_fine_scale
 
-class AnnotationMaker():
+class AnnotationMaker(BaseManager):
 
-    def create_and_compute_annotations(self, save_folder: Path, drone_folder_png: Path, annotation_tiles_gdf_filtered: gpd.GeoDataFrame) -> Path: 
+    def __init__(self, args: Namespace) -> None:
+        super().__init__(args)
+
+    def create_and_compute_annotations(self, annotation_tiles_gdf_filtered: gpd.GeoDataFrame) -> Path: 
 
         binary_annotation_df = self.create_binary_annotations_for_tiles(annotation_tiles_gdf_filtered)
-        annotations_tiles_from_binary_fine_scale = self.create_probability_annotations_for_tiles(save_folder, annotation_tiles_gdf_filtered, binary_annotation_df)
-        unlabeled_folder = self.move_images_by_annotations(save_folder, drone_folder_png, annotations_tiles_from_binary_fine_scale)
+        annotations_tiles_from_binary_fine_scale = self.create_probability_annotations_for_tiles(annotation_tiles_gdf_filtered, binary_annotation_df)
+        unlabeled_folder = self.move_images_by_annotations(annotations_tiles_from_binary_fine_scale)
         return unlabeled_folder
     
 
-    def move_images_by_annotations(self, save_folder: Path, drone_folder_png: Path, df_anno) -> Path:
+    def move_images_by_annotations(self, df_anno) -> Path:
         print("\n\n-- func: Copy images into annotated and unlabeled folder.")
         
-        annotated_dir = Path(save_folder, 'annotated_images_png')
+        annotated_dir = Path(self.output_folder, 'annotated_images_png')
         annotated_dir.mkdir(exist_ok=True, parents=True)
 
-        unlabeled_dir = Path(save_folder, "unlabeled_images_png")
+        unlabeled_dir = Path(self.output_folder, "unlabeled_images_png")
         unlabeled_dir.mkdir(exist_ok=True, parents=True)
 
         df_anno.set_index("FileName", inplace=True)
 
-        for file_png in tqdm(drone_folder_png.iterdir()):
+        for file_png in tqdm(self.tiles_png_folder.iterdir()):
             if not file_png.is_file() or file_png.suffix.lower() != ".png": continue
 
             output_path = Path(annotated_dir, file_png.name) if file_png.stem in df_anno.index else Path(unlabeled_dir, file_png.name)
 
             shutil.move(file_png, output_path)
 
-        drone_folder_png.rmdir()
+        self.tiles_png_folder.rmdir()
         return unlabeled_dir
 
 
@@ -67,7 +72,7 @@ class AnnotationMaker():
         return binary_annotation_df
     
 
-    def create_probability_annotations_for_tiles(self, save_folder: Path, annotation_tiles_gdf_filtered: gpd.GeoDataFrame, binary_annotation_df):
+    def create_probability_annotations_for_tiles(self, annotation_tiles_gdf_filtered: gpd.GeoDataFrame, binary_annotation_df):
         print("\n\n-- func: Create probability annotations.")
         
         classes = []
@@ -139,8 +144,8 @@ class AnnotationMaker():
         annotations_tiles_from_probs_fine_scale[['GPSLatitude', 'GPSLongitude']] = annotations_tiles_from_probs_fine_scale.apply(utm_to_wgs84, axis=1)
         annotations_tiles_from_binary_fine_scale[['GPSLatitude', 'GPSLongitude']] = annotations_tiles_from_binary_fine_scale.apply(utm_to_wgs84, axis=1)
 
-        annotations_tiles_from_probs_fine_scale_path = Path(save_folder, "annotations_tiles_from_probs_fine_scale.csv")
-        annotations_tiles_from_binary_fine_scale_path = Path(save_folder, "annotations_tiles_from_binary_fine_scale.csv")
+        annotations_tiles_from_probs_fine_scale_path = Path(self.output_folder, "annotations_tiles_from_probs_fine_scale.csv")
+        annotations_tiles_from_binary_fine_scale_path = Path(self.output_folder, "annotations_tiles_from_binary_fine_scale.csv")
         annotations_tiles_from_probs_fine_scale.to_csv(annotations_tiles_from_probs_fine_scale_path, index=False)
         annotations_tiles_from_binary_fine_scale.to_csv(annotations_tiles_from_binary_fine_scale_path, index=False)
 

@@ -53,16 +53,16 @@ class Orthophoto(BaseManager):
                 raise NameError(f"Orthophoto crs doesn't match with desired args {self.args.matching_crs}")
     
     
-    def setup_ortho_tiles(self, save_folder: Path, drone_preprocess_tif_folder: Path, drone_filtered_png_folder: Path) -> pd.DataFrame:
-        csv_path = Path(save_folder, 'filtered_bounds_on_manual_boundary_df.csv')
-        bounds = self.split_tif_into_tiles(drone_preprocess_tif_folder)
+    def setup_ortho_tiles(self) -> pd.DataFrame:
+        csv_path = Path(self.output_folder, 'filtered_bounds_on_manual_boundary_df.csv')
+        bounds = self.split_tif_into_tiles()
         filtered_bounds_on_manual_boundary_df = self.filter_tiles_based_on_manual_boundary(bounds)
-        self.convert_tif_to_png(drone_filtered_png_folder, filtered_bounds_on_manual_boundary_df)
+        self.convert_tif_to_png(filtered_bounds_on_manual_boundary_df)
         filtered_bounds_on_manual_boundary_df.to_csv(csv_path, index=False)
         return filtered_bounds_on_manual_boundary_df
     
 
-    def convert_tif_to_png(self, drone_filtered_png_folder: Path, filtered_bounds_on_manual_boundary_df: pd.DataFrame) -> None:
+    def convert_tif_to_png(self, filtered_bounds_on_manual_boundary_df: pd.DataFrame) -> None:
         print("\n\n-- func: Convert TIF Files to png files.")
         
         # Mandatory by gdal warning.
@@ -72,7 +72,7 @@ class Orthophoto(BaseManager):
         for i, row in tqdm(filtered_bounds_on_manual_boundary_df.iterrows(), total=len(filtered_bounds_on_manual_boundary_df)):
             # Rename tif file to match png filename
             input_path = Path(row["tile_filename"].parent, f'{row["tile_png"]}.tif')
-            output_path = Path(drone_filtered_png_folder, f'{row["tile_png"]}.png')
+            output_path = Path(self.tiles_png_folder, f'{row["tile_png"]}.png')
 
             shutil.move(row["tile_filename"], input_path)
 
@@ -82,7 +82,7 @@ class Orthophoto(BaseManager):
         print("-- func: Conversion to PNG completed.")
 
         # After all the conversions are done, remove the .aux.xml files.
-        for aux_file in drone_filtered_png_folder.iterdir():
+        for aux_file in self.tiles_png_folder.iterdir():
             if ".aux.xml" in aux_file.name.lower():
                 aux_file.unlink()
         
@@ -114,7 +114,7 @@ class Orthophoto(BaseManager):
         return bounds_df[bounds_df["tile_png"] != ""].reset_index()
 
 
-    def split_tif_into_tiles(self, output_dir: Path) -> pd.DataFrame:
+    def split_tif_into_tiles(self) -> pd.DataFrame:
         print("\n\n-- func: Split tif into tiles.")
         
         tile_size = int(self.args.tiles_size_meters // (self.GSD_mean / 100))
@@ -146,7 +146,7 @@ class Orthophoto(BaseManager):
                     if percentage_white_pixel > self.args.white_pixels_threshold_percentage:
                         continue
 
-                    tile_filename = Path(output_dir / f"tile_{i}_{j}.tif")
+                    tile_filename = Path(self.tiles_folder / f"tile_{i}_{j}.tif")
                     
                     with rasterio.open(
                         tile_filename, "w",
@@ -169,12 +169,12 @@ class Orthophoto(BaseManager):
 
         return bounds_df
 
-    def create_unlabeled_csv(self, save_folder: Path, unlabeled_folder: Path, tiles_bound_df: pd.DataFrame):
+    def create_unlabeled_csv(self, unlabeled_folder: Path, tiles_bound_df: pd.DataFrame):
         print("\n\n-- func: Create unlabeled CSV.")
         transformer = Transformer.from_crs("epsg:32740", "epsg:4326", always_xy=True)  # Adjust the EPSG codes as needed
 
         # Prepare CSV for GPS information
-        csv_path = Path(save_folder, 'unlabeled_images_geolocations.csv')
+        csv_path = Path(self.output_folder, 'unlabeled_images_geolocations.csv')
         geolocations = []  # List to hold the geolocation data
 
         tiles_bound_df.set_index("tile_png", inplace=True)

@@ -34,37 +34,16 @@ def main(args: Namespace) -> None:
     # Setup.
     orthoManager = Orthophoto(args)
     asvManager = ASVManager(args)
-    annotationMaker = AnnotationMaker()
-
-    # Create output folder.
-    print("Init output folder.")
-    output_folder = Path(orthoManager.config_env["OUTPUT_DIR_PATH"])
-    if output_folder.exists() and args.clear_all:
-        shutil.rmtree(output_folder)
-    output_folder.mkdir(exist_ok=True, parents=True)
-
-    # Create tiles_folder for tif.
-    tiles_folder_name = "drone_tiles" 
-    if args.h_shift != 0 and args.v_shift != 0:
-        tiles_folder_name = f"{tiles_folder_name}_overlap{args.h_shift}"
-    if args.footprint_threshold != 1.0:
-        tiles_folder_name = f"{tiles_folder_name}_footprint{args.footprint_threshold}"
-
-    tiles_folder = Path(output_folder, tiles_folder_name)
-    tiles_folder.mkdir(exist_ok=True, parents=True)
-
-    # Create tiles_folder for png.
-    tiles_png_folder = Path(output_folder, f"{tiles_folder_name}_png")
-    tiles_png_folder.mkdir(exist_ok=True, parents=True)
+    annotationMaker = AnnotationMaker(args)
 
     # Split tif into tiles and filter on manual boundary
-    tiles_bounds_df = orthoManager.setup_ortho_tiles(output_folder, tiles_folder, tiles_png_folder)
+    tiles_bounds_df = orthoManager.setup_ortho_tiles()
 
-    annotation_filtered_gdf = asvManager.compute_annotations(output_folder, tiles_bounds_df)
+    annotation_filtered_gdf = asvManager.compute_annotations(tiles_bounds_df)
 
-    unlabeled_folder = annotationMaker.create_and_compute_annotations(output_folder, tiles_png_folder, annotation_filtered_gdf)
+    unlabeled_folder = annotationMaker.create_and_compute_annotations(annotation_filtered_gdf)
 
-    orthoManager.create_unlabeled_csv(output_folder, unlabeled_folder, tiles_bounds_df)
+    orthoManager.create_unlabeled_csv(unlabeled_folder, tiles_bounds_df)
 
 if __name__ == "__main__":
     args = parse_args()
